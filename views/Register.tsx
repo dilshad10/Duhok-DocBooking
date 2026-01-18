@@ -4,9 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import { StorageService } from '../services/storage';
 import { DAYS_OF_WEEK, TIME_SLOTS } from '../constants';
 import { Doctor } from '../types';
+import { translations } from '../translations';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
+  const lang = StorageService.getLanguage();
+  const t = translations[lang];
+
   const [specialties, setSpecialties] = useState<string[]>([]);
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -56,7 +60,7 @@ const Register: React.FC = () => {
       id: Math.random().toString(36).substr(2, 9),
       fullName: formData.fullName,
       email: formData.email,
-      passwordHash: formData.password, // In production, hash this
+      passwordHash: formData.password,
       phoneNumber: formData.phoneNumber,
       specialty: formData.specialty,
       clinicName: formData.clinicName,
@@ -82,13 +86,13 @@ const Register: React.FC = () => {
         <div className="w-20 h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
           <i className="fa-solid fa-hourglass-half text-4xl animate-pulse"></i>
         </div>
-        <h2 className="text-2xl font-bold mb-4">Registration Submitted</h2>
-        <p className="text-gray-600 mb-8 leading-relaxed">Thank you, Dr. {formData.fullName}. Your account is currently <strong>pending approval</strong> by our admin team in Duhok. You will be able to login once your clinic details are verified.</p>
+        <h2 className="text-2xl font-bold mb-4">{t.regSubmitted}</h2>
+        <p className="text-gray-600 mb-8 leading-relaxed">Thank you, Dr. {formData.fullName}. {t.regPendingMsg}</p>
         <button 
           onClick={() => navigate('/login')}
           className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 transition shadow-lg"
         >
-          Go to Login
+          {t.login}
         </button>
       </div>
     );
@@ -98,10 +102,10 @@ const Register: React.FC = () => {
     <div className="max-w-3xl mx-auto bg-white p-10 rounded-[40px] shadow-2xl border border-gray-100">
       <div className="flex justify-between items-center mb-10">
         <div>
-          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">Doctor Registration</h2>
-          <p className="text-gray-500 font-medium">Join the Duhok healthcare network</p>
+          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">{t.regTitle}</h2>
+          <p className="text-gray-500 font-medium">{t.regSub}</p>
         </div>
-        <div className="flex items-center space-x-2 bg-gray-100 p-2 rounded-2xl">
+        <div className="flex items-center space-x-2 rtl:space-x-reverse bg-gray-100 p-2 rounded-2xl">
           <div className={`w-3 h-3 rounded-full ${step >= 1 ? 'bg-blue-600' : 'bg-gray-300'}`}></div>
           <div className={`w-3 h-3 rounded-full ${step >= 2 ? 'bg-blue-600' : 'bg-gray-300'}`}></div>
         </div>
@@ -114,7 +118,7 @@ const Register: React.FC = () => {
           <div className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Full Name</label>
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 rtl:mr-1">{t.fullName}</label>
                 <input 
                   type="text" 
                   className="w-full bg-gray-50 border-gray-100 rounded-2xl p-4 text-sm font-bold focus:ring-4 focus:ring-blue-100 outline-none transition-all"
@@ -125,19 +129,19 @@ const Register: React.FC = () => {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Medical Specialty</label>
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 rtl:mr-1">{t.medicalSpec}</label>
                 <select 
                   className="w-full bg-gray-50 border-gray-100 rounded-2xl p-4 text-sm font-bold focus:ring-4 focus:ring-blue-100 outline-none transition-all"
                   value={formData.specialty}
                   onChange={e => setFormData({ ...formData, specialty: e.target.value })}
                   required
                 >
-                  <option value="">Select Specialty</option>
+                  <option value="">{t.selectSpec}</option>
                   {specialties.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Email Address</label>
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 rtl:mr-1">{t.email}</label>
                 <input 
                   type="email" 
                   className="w-full bg-gray-50 border-gray-100 rounded-2xl p-4 text-sm font-bold focus:ring-4 focus:ring-blue-100 outline-none transition-all"
@@ -148,18 +152,18 @@ const Register: React.FC = () => {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Password</label>
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 rtl:mr-1">{t.password}</label>
                 <input 
                   type="password" 
                   className="w-full bg-gray-50 border-gray-100 rounded-2xl p-4 text-sm font-bold focus:ring-4 focus:ring-blue-100 outline-none transition-all"
-                  placeholder="Create a password"
+                  placeholder="••••••••"
                   value={formData.password}
                   onChange={e => setFormData({ ...formData, password: e.target.value })}
                   required
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Clinic Name & Branch</label>
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 rtl:mr-1">{t.clinicBranch}</label>
                 <input 
                   type="text" 
                   className="w-full bg-gray-50 border-gray-100 rounded-2xl p-4 text-sm font-bold focus:ring-4 focus:ring-blue-100 outline-none transition-all"
@@ -170,7 +174,7 @@ const Register: React.FC = () => {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Work Phone Number</label>
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 rtl:mr-1">{t.whatsappNum}</label>
                 <input 
                   type="tel" 
                   className="w-full bg-gray-50 border-gray-100 rounded-2xl p-4 text-sm font-bold focus:ring-4 focus:ring-blue-100 outline-none transition-all"
@@ -181,7 +185,7 @@ const Register: React.FC = () => {
                 />
               </div>
               <div className="space-y-2 md:col-span-2">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Profile Photo URL</label>
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 rtl:mr-1">{t.profileUrl}</label>
                 <input 
                   type="url" 
                   className="w-full bg-gray-50 border-gray-100 rounded-2xl p-4 text-sm font-bold focus:ring-4 focus:ring-blue-100 outline-none transition-all"
@@ -189,15 +193,14 @@ const Register: React.FC = () => {
                   value={formData.profileImageUrl}
                   onChange={e => setFormData({ ...formData, profileImageUrl: e.target.value })}
                 />
-                <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-1 ml-1">Professional headshot recommended for trust.</p>
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Brief Biography (Optional)</label>
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 rtl:mr-1">{t.bio}</label>
               <textarea 
                 className="w-full bg-gray-50 border-gray-100 rounded-3xl p-5 text-sm font-medium focus:ring-4 focus:ring-blue-100 outline-none transition-all h-32 leading-relaxed"
-                placeholder="Share your background, qualifications, or specific services offered to patients..."
+                placeholder={t.bioPlaceholder}
                 value={formData.bio}
                 onChange={e => setFormData({ ...formData, bio: e.target.value })}
               />
@@ -209,7 +212,7 @@ const Register: React.FC = () => {
               disabled={!formData.fullName || !formData.email || !formData.password || !formData.clinicName || !formData.phoneNumber}
               className="w-full bg-blue-600 text-white font-bold py-5 rounded-[24px] hover:bg-blue-700 active:scale-95 transition-all shadow-xl shadow-blue-100 disabled:opacity-30"
             >
-              Continue to Schedule
+              {t.continueSchedule}
             </button>
           </div>
         )}
@@ -217,7 +220,7 @@ const Register: React.FC = () => {
         {step === 2 && (
           <div className="space-y-10 animate-in slide-in-from-right-4 duration-500">
             <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4 ml-1">Working Days</label>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4 ml-1 rtl:mr-1">{t.workingDays}</label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {DAYS_OF_WEEK.map(day => (
                   <button
@@ -237,7 +240,7 @@ const Register: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4 ml-1">Available Time Slots</label>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4 ml-1 rtl:mr-1">{t.availableSlots}</label>
               <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
                 {TIME_SLOTS.map(slot => (
                   <button
@@ -256,20 +259,20 @@ const Register: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex gap-4">
+            <div className="flex gap-4 rtl:space-x-reverse">
               <button 
                 type="button"
                 onClick={() => setStep(1)}
                 className="w-1/3 bg-gray-100 text-gray-600 font-bold py-5 rounded-[24px] hover:bg-gray-200 transition-all"
               >
-                Go Back
+                {t.goBack}
               </button>
               <button 
                 type="submit"
                 disabled={formData.workingDays.length === 0 || formData.timeSlots.length === 0}
                 className="flex-grow bg-blue-600 text-white font-bold py-5 rounded-[24px] hover:bg-blue-700 active:scale-95 transition-all shadow-xl shadow-blue-100 disabled:opacity-30"
               >
-                Complete Registration
+                {t.completeReg}
               </button>
             </div>
           </div>

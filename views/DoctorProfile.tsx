@@ -205,14 +205,23 @@ const DoctorProfile: React.FC = () => {
                <p className="text-blue-600 font-bold">{doctor.specialty}</p>
              </div>
            </div>
-           <p className="text-gray-600 leading-relaxed italic">"{doctor.bio || 'Professional medical specialist in Duhok.'}"</p>
+           <p className="text-gray-600 leading-relaxed italic mb-8">"{doctor.bio || 'Professional medical specialist in Duhok.'}"</p>
            
-           <div className="mt-8 pt-8 border-t">
-              <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-4">{t.clinicLoc}</p>
-              <p className="font-bold text-gray-800 flex items-center gap-2">
-                <i className="fa-solid fa-location-dot text-blue-500"></i>
-                {doctor.clinicName}
-              </p>
+           <div className="space-y-6 pt-8 border-t">
+              <div className="flex items-start gap-4">
+                 <div className="w-10 h-10 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center shrink-0"><i className="fa-solid fa-hospital"></i></div>
+                 <div>
+                    <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">{t.clinicLoc}</p>
+                    <p className="font-bold text-gray-800">{doctor.clinicName}</p>
+                 </div>
+              </div>
+              <div className="flex items-start gap-4">
+                 <div className="w-10 h-10 bg-indigo-50 text-indigo-500 rounded-xl flex items-center justify-center shrink-0"><i className="fa-solid fa-location-dot"></i></div>
+                 <div>
+                    <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">{t.area}</p>
+                    <p className="font-bold text-gray-800">{doctor.area}</p>
+                 </div>
+              </div>
            </div>
         </div>
 
@@ -253,7 +262,7 @@ const DoctorProfile: React.FC = () => {
                     onClick={() => setBookingData({...bookingData, date: day.fullDate, time: ''})}
                     className={`flex-shrink-0 w-20 p-4 rounded-2xl border transition-all text-center ${
                       bookingData.date === day.fullDate 
-                        ? 'bg-blue-600 border-blue-600 text-white shadow-lg' 
+                        ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-100' 
                         : 'bg-white border-gray-100 text-gray-500 hover:border-blue-400'
                     }`}
                   >

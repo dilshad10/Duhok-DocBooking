@@ -13,8 +13,10 @@ const PatientHome: React.FC = () => {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
   const [specialties, setSpecialties] = useState<string[]>([]);
+  const [areas, setAreas] = useState<string[]>([]);
   const [search, setSearch] = useState('');
   const [specialtyFilter, setSpecialtyFilter] = useState('');
+  const [areaFilter, setAreaFilter] = useState('');
   const [hospitalFilter, setHospitalFilter] = useState('');
 
   useEffect(() => {
@@ -22,6 +24,7 @@ const PatientHome: React.FC = () => {
     setDoctors(allDocs);
     setHospitals(StorageService.getHospitals());
     setSpecialties(StorageService.getSpecialties());
+    setAreas(StorageService.getAreas());
   }, []);
 
   const filteredDoctors = useMemo(() => {
@@ -29,10 +32,11 @@ const PatientHome: React.FC = () => {
       const matchesSearch = d.fullName.toLowerCase().includes(search.toLowerCase()) || 
                             d.clinicName.toLowerCase().includes(search.toLowerCase());
       const matchesSpecialty = !specialtyFilter || d.specialty === specialtyFilter;
+      const matchesArea = !areaFilter || d.area === areaFilter;
       const matchesHospital = !hospitalFilter || d.clinicName.toLowerCase().includes(hospitalFilter.toLowerCase());
-      return matchesSearch && matchesSpecialty && matchesHospital;
+      return matchesSearch && matchesSpecialty && matchesArea && matchesHospital;
     });
-  }, [doctors, search, specialtyFilter, hospitalFilter]);
+  }, [doctors, search, specialtyFilter, areaFilter, hospitalFilter]);
 
   const openInMap = (term: string) => {
     window.open(`https://www.google.com/maps/search/Duhok+${encodeURIComponent(term)}`, '_blank');
@@ -52,8 +56,8 @@ const PatientHome: React.FC = () => {
           {t.heroSub}
         </p>
         
-        <div className="mt-12 max-w-4xl mx-auto flex flex-col md:flex-row gap-4 relative z-10">
-          <div className="flex-grow relative group">
+        <div className="mt-12 max-w-5xl mx-auto flex flex-col md:flex-row gap-4 relative z-10 px-4">
+          <div className="flex-grow relative group min-w-[300px]">
             <i className={`fa-solid fa-magnifying-glass absolute ${lang === 'en' ? 'left-6' : 'right-6'} top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors`}></i>
             <input 
               type="text" 
@@ -63,14 +67,24 @@ const PatientHome: React.FC = () => {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <select 
-            className="md:w-72 px-8 py-6 rounded-[32px] border-none shadow-2xl focus:ring-8 focus:ring-blue-400/20 bg-white font-black text-gray-700 text-lg appearance-none cursor-pointer"
-            value={specialtyFilter}
-            onChange={(e) => setSpecialtyFilter(e.target.value)}
-          >
-            <option value="">{t.allSpecialties}</option>
-            {specialties.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <select 
+              className="px-8 py-6 rounded-[32px] border-none shadow-2xl focus:ring-8 focus:ring-blue-400/20 bg-white font-black text-gray-700 text-lg appearance-none cursor-pointer min-w-[200px]"
+              value={specialtyFilter}
+              onChange={(e) => setSpecialtyFilter(e.target.value)}
+            >
+              <option value="">{t.allSpecialties}</option>
+              {specialties.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <select 
+              className="px-8 py-6 rounded-[32px] border-none shadow-2xl focus:ring-8 focus:ring-blue-400/20 bg-white font-black text-gray-700 text-lg appearance-none cursor-pointer min-w-[200px]"
+              value={areaFilter}
+              onChange={(e) => setAreaFilter(e.target.value)}
+            >
+              <option value="">{t.allAreas}</option>
+              {areas.map(a => <option key={a} value={a}>{a}</option>)}
+            </select>
+          </div>
         </div>
       </section>
 
@@ -81,9 +95,9 @@ const PatientHome: React.FC = () => {
             <h2 className="text-2xl font-black text-gray-900 tracking-tight">{t.hospitalsHeader}</h2>
             <p className="text-gray-500 font-bold text-sm">{t.hospitalsSub}</p>
           </div>
-          {hospitalFilter && (
+          {(hospitalFilter || areaFilter || specialtyFilter || search) && (
             <button 
-              onClick={() => setHospitalFilter('')}
+              onClick={() => { setHospitalFilter(''); setAreaFilter(''); setSpecialtyFilter(''); setSearch(''); }}
               className="text-blue-600 font-bold text-sm hover:underline"
             >
               {t.clearFilter}
@@ -117,7 +131,7 @@ const PatientHome: React.FC = () => {
                 <i className="fa-solid fa-hospital"></i>
               </div>
               <h3 className={`font-bold text-lg leading-tight mb-1 ${hospitalFilter === hosp.name ? 'text-white' : 'text-gray-900'}`}>{hosp.name}</h3>
-              <p className={`text-xs font-bold uppercase tracking-widest ${hospitalFilter === hosp.name ? 'text-blue-100' : 'text-gray-400'}`}>{hosp.area}, دهۆک</p>
+              <p className={`text-xs font-bold uppercase tracking-widest ${hospitalFilter === hosp.name ? 'text-blue-100' : 'text-gray-400'}`}>{hosp.area}</p>
             </div>
           ))}
         </div>
@@ -155,17 +169,23 @@ const PatientHome: React.FC = () => {
                   </div>
                 </div>
                 <h3 className="relative z-10 text-2xl font-extrabold text-gray-900 group-hover:text-blue-700 transition-colors tracking-tight">Dr. {doc.fullName}</h3>
-                <p className="relative z-10 text-gray-500 flex items-center mt-2 text-sm font-medium">
-                  <i className={`fa-solid fa-location-dot ${lang === 'en' ? 'mr-2' : 'ml-2'} text-blue-400`}></i>
-                  {doc.clinicName}
-                </p>
+                <div className="relative z-10 mt-2 space-y-1">
+                  <p className="text-gray-500 flex items-center text-sm font-medium">
+                    <i className={`fa-solid fa-hospital ${lang === 'en' ? 'mr-2' : 'ml-2'} text-blue-400`}></i>
+                    {doc.clinicName}
+                  </p>
+                  <p className="text-gray-400 flex items-center text-xs font-bold uppercase tracking-widest">
+                    <i className={`fa-solid fa-location-dot ${lang === 'en' ? 'mr-2.5' : 'ml-2.5'} text-blue-300`}></i>
+                    {doc.area}
+                  </p>
+                </div>
                 <div className="mt-4 flex items-center gap-1 text-yellow-400 text-sm">
                   {[...Array(5)].map((_, i) => <i key={i} className="fa-solid fa-star"></i>)}
                   <span className="text-gray-400 font-bold ml-2 text-xs">Verified</span>
                 </div>
                 <button 
                   onClick={() => navigate(`/doctor/${doc.id}`)}
-                  className="relative z-10 mt-8 w-full bg-gray-900 text-white font-bold py-4 rounded-2xl hover:bg-blue-600 transition-all shadow-lg active:scale-95"
+                  className="relative z-10 mt-8 w-full bg-gray-900 text-white font-black py-4 rounded-2xl hover:bg-blue-600 transition-all shadow-lg active:scale-95"
                 >
                   {t.bookBtn}
                 </button>

@@ -12,6 +12,7 @@ const Register: React.FC = () => {
   const t = translations[lang];
 
   const [specialties, setSpecialties] = useState<string[]>([]);
+  const [areas, setAreas] = useState<string[]>([]);
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     fullName: '',
@@ -19,6 +20,7 @@ const Register: React.FC = () => {
     password: '',
     specialty: '',
     clinicName: '',
+    area: '',
     phoneNumber: '',
     profileImageUrl: '',
     bio: '',
@@ -29,6 +31,7 @@ const Register: React.FC = () => {
 
   useEffect(() => {
     setSpecialties(StorageService.getSpecialties());
+    setAreas(StorageService.getAreas());
   }, []);
 
   const toggleDay = (day: string) => {
@@ -64,6 +67,7 @@ const Register: React.FC = () => {
       phoneNumber: formData.phoneNumber,
       specialty: formData.specialty,
       clinicName: formData.clinicName,
+      area: formData.area,
       profileImageUrl: formData.profileImageUrl,
       bio: formData.bio,
       workingDays: formData.workingDays,
@@ -99,7 +103,7 @@ const Register: React.FC = () => {
   }
 
   return (
-    <div className="max-w-3xl mx-auto bg-white p-10 rounded-[40px] shadow-2xl border border-gray-100">
+    <div className="max-w-4xl mx-auto bg-white p-10 rounded-[40px] shadow-2xl border border-gray-100">
       <div className="flex justify-between items-center mb-10">
         <div>
           <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">{t.regTitle}</h2>
@@ -115,7 +119,7 @@ const Register: React.FC = () => {
         {error && <div className="bg-red-50 text-red-600 p-4 rounded-2xl text-sm font-bold border border-red-100">{error}</div>}
 
         {step === 1 && (
-          <div className="space-y-8">
+          <div className="space-y-8 animate-in fade-in duration-500">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 rtl:mr-1">{t.fullName}</label>
@@ -131,7 +135,7 @@ const Register: React.FC = () => {
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 rtl:mr-1">{t.medicalSpec}</label>
                 <select 
-                  className="w-full bg-gray-50 border-gray-100 rounded-2xl p-4 text-sm font-bold focus:ring-4 focus:ring-blue-100 outline-none transition-all"
+                  className="w-full bg-gray-50 border-gray-100 rounded-2xl p-4 text-sm font-bold focus:ring-4 focus:ring-blue-100 outline-none transition-all appearance-none"
                   value={formData.specialty}
                   onChange={e => setFormData({ ...formData, specialty: e.target.value })}
                   required
@@ -174,6 +178,18 @@ const Register: React.FC = () => {
                 />
               </div>
               <div className="space-y-2">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 rtl:mr-1">{t.area}</label>
+                <select 
+                  className="w-full bg-gray-50 border-gray-100 rounded-2xl p-4 text-sm font-bold focus:ring-4 focus:ring-blue-100 outline-none transition-all appearance-none"
+                  value={formData.area}
+                  onChange={e => setFormData({ ...formData, area: e.target.value })}
+                  required
+                >
+                  <option value="">{t.selectArea}</option>
+                  {areas.map(a => <option key={a} value={a}>{a}</option>)}
+                </select>
+              </div>
+              <div className="space-y-2">
                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 rtl:mr-1">{t.whatsappNum}</label>
                 <input 
                   type="tel" 
@@ -184,7 +200,7 @@ const Register: React.FC = () => {
                   required
                 />
               </div>
-              <div className="space-y-2 md:col-span-2">
+              <div className="space-y-2">
                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 rtl:mr-1">{t.profileUrl}</label>
                 <input 
                   type="url" 
@@ -209,8 +225,8 @@ const Register: React.FC = () => {
             <button 
               type="button"
               onClick={() => setStep(2)}
-              disabled={!formData.fullName || !formData.email || !formData.password || !formData.clinicName || !formData.phoneNumber}
-              className="w-full bg-blue-600 text-white font-bold py-5 rounded-[24px] hover:bg-blue-700 active:scale-95 transition-all shadow-xl shadow-blue-100 disabled:opacity-30"
+              disabled={!formData.fullName || !formData.email || !formData.password || !formData.clinicName || !formData.phoneNumber || !formData.area}
+              className="w-full bg-blue-600 text-white font-black py-5 rounded-[24px] hover:bg-blue-700 active:scale-95 transition-all shadow-xl shadow-blue-100 disabled:opacity-30"
             >
               {t.continueSchedule}
             </button>

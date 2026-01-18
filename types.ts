@@ -20,6 +20,8 @@ export interface Doctor {
   phoneNumber: string;
   specialty: string;
   clinicName: string;
+  area: string; // Area in Duhok
+  hospitalId?: string; // Optional: linked to a specific hospital
   profileImageUrl?: string; // Doctor's profile picture
   bio?: string; // Short biography for patients
   workingDays: string[]; // array/JSON

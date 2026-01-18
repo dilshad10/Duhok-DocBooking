@@ -5,6 +5,13 @@ export type AppointmentStatus = 'booked' | 'completed' | 'cancelled';
 export type AdminRole = 'admin' | 'super_admin';
 export type AdminActionType = 'approve_doctor' | 'reject_doctor' | 'suspend_doctor' | 'activate_doctor';
 
+export interface Hospital {
+  id: string;
+  name: string;
+  area: string;
+  coords: string;
+}
+
 export interface Doctor {
   id: string; // primary key
   fullName: string;
@@ -13,6 +20,7 @@ export interface Doctor {
   phoneNumber: string;
   specialty: string;
   clinicName: string;
+  profileImageUrl?: string; // Doctor's profile picture
   bio?: string; // Short biography for patients
   workingDays: string[]; // array/JSON
   timeSlots: string[]; // array/JSON

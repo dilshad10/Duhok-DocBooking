@@ -1,12 +1,13 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { StorageService } from '../services/storage';
-import { SPECIALTIES, DAYS_OF_WEEK, TIME_SLOTS } from '../constants';
+import { DAYS_OF_WEEK, TIME_SLOTS } from '../constants';
 import { Doctor } from '../types';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
+  const [specialties, setSpecialties] = useState<string[]>([]);
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     fullName: '',
@@ -15,11 +16,16 @@ const Register: React.FC = () => {
     specialty: '',
     clinicName: '',
     phoneNumber: '',
+    profileImageUrl: '',
     bio: '',
     workingDays: [] as string[],
     timeSlots: [] as string[]
   });
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    setSpecialties(StorageService.getSpecialties());
+  }, []);
 
   const toggleDay = (day: string) => {
     setFormData(prev => ({
@@ -54,6 +60,7 @@ const Register: React.FC = () => {
       phoneNumber: formData.phoneNumber,
       specialty: formData.specialty,
       clinicName: formData.clinicName,
+      profileImageUrl: formData.profileImageUrl,
       bio: formData.bio,
       workingDays: formData.workingDays,
       timeSlots: formData.timeSlots,
@@ -126,7 +133,7 @@ const Register: React.FC = () => {
                   required
                 >
                   <option value="">Select Specialty</option>
-                  {SPECIALTIES.map(s => <option key={s} value={s}>{s}</option>)}
+                  {specialties.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
               <div className="space-y-2">
@@ -172,6 +179,17 @@ const Register: React.FC = () => {
                   onChange={e => setFormData({ ...formData, phoneNumber: e.target.value })}
                   required
                 />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Profile Photo URL</label>
+                <input 
+                  type="url" 
+                  className="w-full bg-gray-50 border-gray-100 rounded-2xl p-4 text-sm font-bold focus:ring-4 focus:ring-blue-100 outline-none transition-all"
+                  placeholder="https://images.unsplash.com/..."
+                  value={formData.profileImageUrl}
+                  onChange={e => setFormData({ ...formData, profileImageUrl: e.target.value })}
+                />
+                <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-1 ml-1">Professional headshot recommended for trust.</p>
               </div>
             </div>
 

@@ -1,38 +1,40 @@
 
-import { Appointment } from '../types';
+import { Appointment } from '../types.ts';
 
 export const MessagingService = {
   /**
-   * Generates a professional WhatsApp link with the requested Kurdish text.
+   * Generates a professional WhatsApp link with a "Medical Receipt" format.
    */
   getWhatsAppConfirmationLink: (appointment: Appointment) => {
     const baseUrl = window.location.origin + window.location.pathname;
     const cancelUrl = `${baseUrl}#/cancel/${appointment.cancelToken}`;
     
+    // Formal Kurdish Medical Receipt (Recipe)
     const message = 
-      `سلاڤ، ژڤانێ هەوە هاتە پشتڕاستکرن.\n\n` +
-      `نۆژدار: Dr. ${appointment.doctorName}\n` +
-      `کلینیک: ${appointment.clinicName}\n` +
-      `ڕێکەفت: ${appointment.appointmentDate}\n` +
-      `دەم: ${appointment.appointmentTime}\n\n` +
+      `🏥 **وەسلا ژڤانێ نۆژداری (Medical Receipt)**\n` +
+      `----------------------------------\n` +
+      `👤 **نەخۆش:** ${appointment.patientName}\n` +
+      `👨‍⚕️ **نۆژدار:** Dr. ${appointment.doctorName}\n` +
+      `🏢 **کلینیک:** ${appointment.clinicName}\n` +
+      `📅 **ڕێکەفت:** ${appointment.appointmentDate}\n` +
+      `⏰ **دەمژمێر:** ${appointment.appointmentTime}\n` +
+      `----------------------------------\n` +
       `بۆ هەلوەشاندنا ژڤانێ خۆ، کلیک ل ڤێرە بکە:\n` +
-      `${cancelUrl}`;
+      `${cancelUrl}\n\n` +
+      `هیڤیا سلامەتیێ بۆ هەوە دخوازین.`;
     
     let phone = appointment.patientPhone.replace(/\s/g, '').replace(/-/g, '');
+    
+    // Automatically fix number for Kurdistan/Iraq (964)
     if (!phone.startsWith('964') && !phone.startsWith('00964')) {
-      if (phone.startsWith('0')) phone = '964' + phone.substring(1);
-      else phone = '964' + phone;
+      if (phone.startsWith('0')) {
+        phone = '964' + phone.substring(1);
+      } else {
+        phone = '964' + phone;
+      }
     }
 
-    return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-  },
-
-  /**
-   * Triggers the window open immediately.
-   * NOTE: This should be called directly inside a click handler to avoid popup blockers.
-   */
-  triggerAutomaticRedirect: (appointment: Appointment) => {
-    const link = MessagingService.getWhatsAppConfirmationLink(appointment);
-    window.open(link, '_blank');
+    // Direct API link for automatic opening
+    return `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}`;
   }
 };

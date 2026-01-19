@@ -18,6 +18,7 @@ const PatientHome: React.FC = () => {
   const [specialtyFilter, setSpecialtyFilter] = useState('');
   const [areaFilter, setAreaFilter] = useState('');
   const [hospitalFilter, setHospitalFilter] = useState('');
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   const loadLocalData = () => {
     const allDocs = StorageService.getDoctors().filter(d => d.status === 'active');
@@ -25,12 +26,12 @@ const PatientHome: React.FC = () => {
     setHospitals(StorageService.getHospitals());
     setSpecialties(StorageService.getSpecialties());
     setAreas(StorageService.getAreas());
+    setIsInitialLoading(false);
   };
 
   useEffect(() => {
     loadLocalData();
 
-    // Listen for global sync completion to refresh list
     const handleSync = () => {
       loadLocalData();
     };
@@ -204,9 +205,16 @@ const PatientHome: React.FC = () => {
             ))}
           </div>
         ) : (
-          <div className="text-center py-20 bg-gray-50 rounded-[48px] border-2 border-dashed border-gray-200 mx-4">
-             <i className="fa-solid fa-user-doctor text-4xl text-gray-300 mb-4"></i>
-             <p className="text-gray-500 font-bold">{t.noDocs}</p>
+          <div className="text-center py-24 bg-gray-50 rounded-[48px] border-2 border-dashed border-gray-200 mx-4">
+             <i className={`fa-solid ${isInitialLoading ? 'fa-rotate animate-spin' : 'fa-user-doctor'} text-4xl text-gray-300 mb-4`}></i>
+             <p className="text-gray-500 font-bold">
+               {isInitialLoading ? "Syncing global directory..." : t.noDocs}
+             </p>
+             {!isInitialLoading && (
+               <p className="text-xs text-gray-400 mt-2 font-medium">
+                 New doctors must be approved by an Admin before appearing here.
+               </p>
+             )}
           </div>
         )}
       </section>

@@ -19,12 +19,23 @@ const PatientHome: React.FC = () => {
   const [areaFilter, setAreaFilter] = useState('');
   const [hospitalFilter, setHospitalFilter] = useState('');
 
-  useEffect(() => {
+  const loadLocalData = () => {
     const allDocs = StorageService.getDoctors().filter(d => d.status === 'active');
     setDoctors(allDocs);
     setHospitals(StorageService.getHospitals());
     setSpecialties(StorageService.getSpecialties());
     setAreas(StorageService.getAreas());
+  };
+
+  useEffect(() => {
+    loadLocalData();
+
+    // Listen for global sync completion to refresh list
+    const handleSync = () => {
+      loadLocalData();
+    };
+    window.addEventListener('sync-complete', handleSync);
+    return () => window.removeEventListener('sync-complete', handleSync);
   }, []);
 
   const filteredDoctors = useMemo(() => {
@@ -199,11 +210,6 @@ const PatientHome: React.FC = () => {
           </div>
         )}
       </section>
-
-      <style>{`
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      `}</style>
     </div>
   );
 };

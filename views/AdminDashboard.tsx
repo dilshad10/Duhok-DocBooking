@@ -26,16 +26,23 @@ const AdminDashboard: React.FC = () => {
   const [newSpec, setNewSpec] = useState('');
   const [newArea, setNewArea] = useState('');
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
   const loadData = () => {
     setDoctors(StorageService.getDoctors().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
     setHospitals(StorageService.getHospitals());
     setSpecialties(StorageService.getSpecialties());
     setAreas(StorageService.getAreas());
   };
+
+  useEffect(() => {
+    loadData();
+
+    // Listen for global sync completion
+    const handleSync = () => {
+      loadData();
+    };
+    window.addEventListener('sync-complete', handleSync);
+    return () => window.removeEventListener('sync-complete', handleSync);
+  }, []);
 
   const handleForceSync = async () => {
     setIsSyncing(true);
@@ -45,16 +52,16 @@ const AdminDashboard: React.FC = () => {
     alert("Data pulled from global registry successfully!");
   };
 
-  const handleStatusChange = (status: DoctorStatus) => {
+  const handleStatusChange = async (status: DoctorStatus) => {
     if (!selectedDoctor || !actionNote) return;
-    StorageService.saveDoctor({ ...selectedDoctor, status, notes: actionNote });
+    await StorageService.saveDoctor({ ...selectedDoctor, status, notes: actionNote });
     setSelectedDoctor(null);
     setActionNote('');
     loadData();
   };
 
   // Hospital Management
-  const handleAddHospital = () => {
+  const handleAddHospital = async () => {
     if (!newHosp.name || !newHosp.area) {
       alert("Please enter both Hospital Name and Area.");
       return;
@@ -65,48 +72,48 @@ const AdminDashboard: React.FC = () => {
       area: newHosp.area!,
       coords: newHosp.coords || ''
     };
-    StorageService.saveHospital(hosp);
+    await StorageService.saveHospital(hosp);
     setNewHosp({ name: '', area: '', coords: '' });
     loadData();
   };
 
-  const handleDeleteHospital = (id: string) => {
+  const handleDeleteHospital = async (id: string) => {
     if (confirm("Are you sure you want to delete this hospital?")) {
-      StorageService.deleteHospital(id);
+      await StorageService.deleteHospital(id);
       loadData();
     }
   };
 
   // Specialty Management
-  const handleAddSpecialty = () => {
+  const handleAddSpecialty = async () => {
     if (!newSpec || specialties.includes(newSpec)) return;
     const updated = [...specialties, newSpec];
-    StorageService.saveSpecialties(updated);
+    await StorageService.saveSpecialties(updated);
     setNewSpec('');
     loadData();
   };
 
-  const handleDeleteSpecialty = (s: string) => {
+  const handleDeleteSpecialty = async (s: string) => {
     if (confirm(`Remove "${s}" from specialties?`)) {
       const updated = specialties.filter(item => item !== s);
-      StorageService.saveSpecialties(updated);
+      await StorageService.saveSpecialties(updated);
       loadData();
     }
   };
 
   // Area Management
-  const handleAddArea = () => {
+  const handleAddArea = async () => {
     if (!newArea || areas.includes(newArea)) return;
     const updated = [...areas, newArea];
-    StorageService.saveAreas(updated);
-    setNewSpec('');
+    await StorageService.saveAreas(updated);
+    setNewArea('');
     loadData();
   };
 
-  const handleDeleteArea = (a: string) => {
+  const handleDeleteArea = async (a: string) => {
     if (confirm(`Remove "${a}" from areas?`)) {
       const updated = areas.filter(item => item !== a);
-      StorageService.saveAreas(updated);
+      await StorageService.saveAreas(updated);
       loadData();
     }
   };

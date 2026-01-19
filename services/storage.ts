@@ -3,7 +3,7 @@ import { Doctor, Appointment, Feedback, AdminAction, AdminUser, DoctorStatus, Ho
 import { Language } from '../translations';
 import { DEFAULT_SPECIALTIES, DEFAULT_DUHOK_AREAS, DEFAULT_HOSPITALS } from '../constants';
 
-// Dedicated Shared Public Vault for this Duhok Healthcare Instance
+// Dedicated Shared Public Vault
 const CLOUD_SYNC_URL = "https://api.npoint.io/89e5a51356e9c490a6d5"; 
 
 const KEYS = {
@@ -26,8 +26,8 @@ const seedData = () => {
     const defaultAdmin: AdminUser = {
       id: 'admin_001',
       fullName: 'Duhok Admin',
-      email: 'admin@docbooking.duhok',
-      passwordHash: '(11223344$$&&@@)',
+      email: 'admin@duh.ok',
+      passwordHash: 'admin123',
       role: 'super_admin',
       createdAt: new Date().toISOString()
     };
@@ -56,20 +56,23 @@ export const StorageService = {
 
         const text = await response.text();
         if (!text || text.trim() === "" || text === "{}") {
-          // If remote is empty, push our local seed
           await StorageService.syncWithCloud('push');
           return true;
         }
 
         const cloudData = JSON.parse(text);
         if (cloudData && typeof cloudData === 'object') {
-          // Merge Strategy: Prefer remote data for shared entities
           if (cloudData.doctors) localStorage.setItem(KEYS.DOCTORS, JSON.stringify(cloudData.doctors));
           if (cloudData.appointments) localStorage.setItem(KEYS.APPOINTMENTS, JSON.stringify(cloudData.appointments));
           if (cloudData.hospitals) localStorage.setItem(KEYS.HOSPITALS, JSON.stringify(cloudData.hospitals));
           if (cloudData.specialties) localStorage.setItem(KEYS.SPECIALTIES, JSON.stringify(cloudData.specialties));
           if (cloudData.areas) localStorage.setItem(KEYS.AREAS, JSON.stringify(cloudData.areas));
+          if (cloudData.admins) localStorage.setItem(KEYS.ADMINS, JSON.stringify(cloudData.admins));
+          
           localStorage.setItem(KEYS.LAST_SYNC, new Date().toISOString());
+          
+          // Dispatch custom event so UI components know to refresh
+          window.dispatchEvent(new CustomEvent('sync-complete'));
           return true;
         }
       } else {
@@ -79,6 +82,7 @@ export const StorageService = {
           hospitals: StorageService.getHospitals(),
           specialties: StorageService.getSpecialties(),
           areas: StorageService.getAreas(),
+          admins: StorageService.getAdmins(),
         };
 
         const response = await fetch(CLOUD_SYNC_URL, {

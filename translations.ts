@@ -83,7 +83,12 @@ export const translations = {
     addHospital: "Add Hospital",
     addSpec: "Add Specialty",
     addArea: "Add Area",
-    status: "Status"
+    status: "Status",
+    syncing: "Syncing...",
+    synced: "Global Mode",
+    forceSync: "Force Cloud Pull",
+    mapLink: "Google Maps Link",
+    mapLinkPlaceholder: "https://maps.app.goo.gl/..."
   },
   ku: {
     heroTitle: "ساخلەمییا دهۆکێ",
@@ -166,7 +171,12 @@ export const translations = {
     addHospital: "زێدەکرنا نەخۆشخانێ",
     addSpec: "زێدەکرنا پسپۆریێ",
     addArea: "زێدەکرنا دەڤەرێ",
-    status: "بارودۆخ"
+    status: "بارودۆخ",
+    syncing: "دێتە نویکرن...",
+    synced: "مودێ جیهانی",
+    forceSync: "نویکرنا جیهانی",
+    mapLink: "لینکا نەخشەی (گۆگل ماپس)",
+    mapLinkPlaceholder: "https://maps.app.goo.gl/..."
   },
   ar: {
     heroTitle: "رعاية دهوك الصحية",
@@ -249,6 +259,11 @@ export const translations = {
     addHospital: "إضافة مستشفى",
     addSpec: "إضافة تخصص",
     addArea: "إضافة منطقة",
-    status: "الحالة"
+    status: "الحالة",
+    syncing: "جاري المزامنة...",
+    synced: "الوضع العالمي",
+    forceSync: "تحديث من السحابة",
+    mapLink: "رابط الخريطة (جوجل مابس)",
+    mapLinkPlaceholder: "https://maps.app.goo.gl/..."
   }
 };

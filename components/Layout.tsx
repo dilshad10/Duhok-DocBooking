@@ -12,6 +12,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children, title }) => {
   const navigate = useNavigate();
   const [lang, setLang] = useState<Language>(StorageService.getLanguage());
+  const [isSyncing, setIsSyncing] = useState(false);
   const t = translations[lang];
   const session = StorageService.getSession();
 
@@ -21,6 +22,14 @@ const Layout: React.FC<LayoutProps> = ({ children, title }) => {
     document.documentElement.dir = dir;
     document.documentElement.lang = lang;
     StorageService.setLanguage(lang);
+    
+    // Initial Cloud Pull to make it cross-browser
+    const performInitialSync = async () => {
+      setIsSyncing(true);
+      await StorageService.syncWithCloud('pull');
+      setIsSyncing(false);
+    };
+    performInitialSync();
   }, [lang]);
 
   const handleLogout = () => {
@@ -31,19 +40,28 @@ const Layout: React.FC<LayoutProps> = ({ children, title }) => {
 
   const changeLang = (l: Language) => {
     setLang(l);
-    window.location.reload(); // Refresh to update all components and constants
+    window.location.reload(); 
   };
 
   return (
     <div className="min-h-screen flex flex-col font-medium">
-      <header className="bg-blue-700 text-white shadow-md sticky top-0 z-50">
+      <header className="bg-blue-700 text-white shadow-md sticky top-0 z-50 transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
-            <i className={`fa-solid fa-house-medical text-2xl ${lang === 'en' ? 'mr-2' : 'ml-2'}`}></i>
+          <div className="flex items-center cursor-pointer group" onClick={() => navigate('/')}>
+            <i className={`fa-solid fa-house-medical text-2xl group-hover:scale-110 transition-transform ${lang === 'en' ? 'mr-2' : 'ml-2'}`}></i>
             <h1 className="text-xl font-bold tracking-tight">Duhok Doc</h1>
           </div>
           
           <nav className="flex items-center space-x-2 sm:space-x-6">
+            {/* Sync Status */}
+            <div className="hidden md:flex items-center mr-4 rtl:ml-4 text-[10px] font-black uppercase tracking-widest opacity-80 bg-blue-800/50 px-3 py-1.5 rounded-full border border-blue-600">
+               {isSyncing ? (
+                 <span className="flex items-center gap-2"><i className="fa-solid fa-rotate animate-spin"></i> {t.syncing}</span>
+               ) : (
+                 <span className="flex items-center gap-2"><i className="fa-solid fa-cloud"></i> {t.synced}</span>
+               )}
+            </div>
+
             {/* Language Switcher */}
             <div className="flex bg-blue-800 p-1 rounded-xl border border-blue-600">
               {(['en', 'ku', 'ar'] as Language[]).map((l) => (

@@ -12,6 +12,7 @@ const AdminDashboard: React.FC = () => {
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
   const [specialties, setSpecialties] = useState<string[]>([]);
   const [areas, setAreas] = useState<string[]>([]);
+  const [isSyncing, setIsSyncing] = useState(false);
   
   const [tab, setTab] = useState<'pending_doctors' | 'all_doctors' | 'manage_site'>('pending_doctors');
   const [siteSubTab, setSiteSubTab] = useState<'hospitals' | 'specialties' | 'areas'>('hospitals');
@@ -34,6 +35,14 @@ const AdminDashboard: React.FC = () => {
     setHospitals(StorageService.getHospitals());
     setSpecialties(StorageService.getSpecialties());
     setAreas(StorageService.getAreas());
+  };
+
+  const handleForceSync = async () => {
+    setIsSyncing(true);
+    await StorageService.syncWithCloud('pull');
+    loadData();
+    setIsSyncing(false);
+    alert("Data pulled from global registry successfully!");
   };
 
   const handleStatusChange = (status: DoctorStatus) => {
@@ -90,7 +99,7 @@ const AdminDashboard: React.FC = () => {
     if (!newArea || areas.includes(newArea)) return;
     const updated = [...areas, newArea];
     StorageService.saveAreas(updated);
-    setNewArea('');
+    setNewSpec('');
     loadData();
   };
 
@@ -112,6 +121,14 @@ const AdminDashboard: React.FC = () => {
           <h1 className="text-3xl font-black text-gray-900">{t.adminTitle}</h1>
           <p className="text-gray-500 font-bold uppercase tracking-tighter text-xs">{t.fullControl}</p>
         </div>
+        <button 
+          onClick={handleForceSync}
+          disabled={isSyncing}
+          className="bg-blue-100 text-blue-700 px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-blue-200 transition-all shadow-lg shadow-blue-900/10 disabled:opacity-50"
+        >
+          {isSyncing ? <i className="fa-solid fa-spinner animate-spin mr-2"></i> : <i className="fa-solid fa-cloud-arrow-down mr-2"></i>}
+          {t.forceSync}
+        </button>
       </div>
 
       <div className="flex gap-4 border-b rtl:space-x-reverse overflow-x-auto no-scrollbar">

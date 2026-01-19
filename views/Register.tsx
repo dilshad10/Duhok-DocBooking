@@ -21,6 +21,7 @@ const Register: React.FC = () => {
     specialty: '',
     clinicName: '',
     area: '',
+    mapLink: '', // Mandatory Location Link
     phoneNumber: '',
     profileImageUrl: '',
     bio: '',
@@ -52,7 +53,7 @@ const Register: React.FC = () => {
     }));
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (StorageService.getDoctorByEmail(formData.email)) {
       setError('Email already registered');
@@ -190,6 +191,17 @@ const Register: React.FC = () => {
                 </select>
               </div>
               <div className="space-y-2">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 rtl:mr-1">{t.mapLink}</label>
+                <input 
+                  type="url" 
+                  className="w-full bg-gray-50 border-gray-100 rounded-2xl p-4 text-sm font-bold focus:ring-4 focus:ring-blue-100 outline-none transition-all"
+                  placeholder={t.mapLinkPlaceholder}
+                  value={formData.mapLink}
+                  onChange={e => setFormData({ ...formData, mapLink: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 rtl:mr-1">{t.whatsappNum}</label>
                 <input 
                   type="tel" 
@@ -198,16 +210,6 @@ const Register: React.FC = () => {
                   value={formData.phoneNumber}
                   onChange={e => setFormData({ ...formData, phoneNumber: e.target.value })}
                   required
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 rtl:mr-1">{t.profileUrl}</label>
-                <input 
-                  type="url" 
-                  className="w-full bg-gray-50 border-gray-100 rounded-2xl p-4 text-sm font-bold focus:ring-4 focus:ring-blue-100 outline-none transition-all"
-                  placeholder="https://images.unsplash.com/..."
-                  value={formData.profileImageUrl}
-                  onChange={e => setFormData({ ...formData, profileImageUrl: e.target.value })}
                 />
               </div>
             </div>
@@ -225,7 +227,7 @@ const Register: React.FC = () => {
             <button 
               type="button"
               onClick={() => setStep(2)}
-              disabled={!formData.fullName || !formData.email || !formData.password || !formData.clinicName || !formData.phoneNumber || !formData.area}
+              disabled={!formData.fullName || !formData.email || !formData.password || !formData.clinicName || !formData.phoneNumber || !formData.area || !formData.mapLink}
               className="w-full bg-blue-600 text-white font-black py-5 rounded-[24px] hover:bg-blue-700 active:scale-95 transition-all shadow-xl shadow-blue-100 disabled:opacity-30"
             >
               {t.continueSchedule}

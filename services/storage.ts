@@ -3,22 +3,21 @@ import { Doctor, Appointment, Feedback, AdminAction, AdminUser, DoctorStatus, Ho
 import { Language } from '../translations';
 import { DEFAULT_SPECIALTIES, DEFAULT_DUHOK_AREAS, DEFAULT_HOSPITALS } from '../constants';
 
-// For this demo, we use an anonymous JSON bin to simulate a shared global backend.
-// In real production, this would be a secure Firebase or Node.js/PostgreSQL backend.
-const CLOUD_SYNC_URL = "https://api.npoint.io/46d9777f903820463321"; // Shared Public Vault
+// Dedicated Shared Public Vault for this Duhok Healthcare Instance
+const CLOUD_SYNC_URL = "https://api.npoint.io/89e5a51356e9c490a6d5"; 
 
 const KEYS = {
-  DOCTORS: 'duh_docs_doctors_v3',
-  APPOINTMENTS: 'duh_docs_appointments_v3',
-  FEEDBACKS: 'duh_docs_feedbacks_v3',
-  ADMINS: 'duh_docs_admins_v3',
-  ADMIN_ACTIONS: 'duh_docs_admin_actions_v3',
-  AUTH: 'duh_docs_auth_v3',
-  LANG: 'duh_docs_lang_v3',
-  HOSPITALS: 'duh_docs_hospitals_v3',
-  SPECIALTIES: 'duh_docs_specialties_v3',
-  AREAS: 'duh_docs_areas_v3',
-  LAST_SYNC: 'duh_docs_last_sync'
+  DOCTORS: 'duh_docs_doctors_v4',
+  APPOINTMENTS: 'duh_docs_appointments_v4',
+  FEEDBACKS: 'duh_docs_feedbacks_v4',
+  ADMINS: 'duh_docs_admins_v4',
+  ADMIN_ACTIONS: 'duh_docs_admin_actions_v4',
+  AUTH: 'duh_docs_auth_v4',
+  LANG: 'duh_docs_lang_v4',
+  HOSPITALS: 'duh_docs_hospitals_v4',
+  SPECIALTIES: 'duh_docs_specialties_v4',
+  AREAS: 'duh_docs_areas_v4',
+  LAST_SYNC: 'duh_docs_last_sync_v4'
 };
 
 const seedData = () => {
@@ -49,28 +48,22 @@ const seedData = () => {
 seedData();
 
 export const StorageService = {
-  // CLOUD SYNC LOGIC
   syncWithCloud: async (direction: 'push' | 'pull' = 'pull'): Promise<boolean> => {
     try {
       if (direction === 'pull') {
         const response = await fetch(CLOUD_SYNC_URL);
-        
-        if (!response.ok) {
-           console.warn("Cloud pull failed: Server returned error", response.status);
-           return false;
-        }
+        if (!response.ok) return false;
 
         const text = await response.text();
         if (!text || text.trim() === "" || text === "{}") {
-          console.info("Cloud is empty. Initializing with local data...");
+          // If remote is empty, push our local seed
           await StorageService.syncWithCloud('push');
           return true;
         }
 
         const cloudData = JSON.parse(text);
-        
-        // Safety check: Only sync if the data structure looks valid
         if (cloudData && typeof cloudData === 'object') {
+          // Merge Strategy: Prefer remote data for shared entities
           if (cloudData.doctors) localStorage.setItem(KEYS.DOCTORS, JSON.stringify(cloudData.doctors));
           if (cloudData.appointments) localStorage.setItem(KEYS.APPOINTMENTS, JSON.stringify(cloudData.appointments));
           if (cloudData.hospitals) localStorage.setItem(KEYS.HOSPITALS, JSON.stringify(cloudData.hospitals));
@@ -100,7 +93,7 @@ export const StorageService = {
         }
       }
     } catch (e) {
-      console.error("Cloud sync failed critically:", e);
+      console.error("Cloud sync error:", e);
       return false;
     }
     return false;
@@ -117,49 +110,49 @@ export const StorageService = {
     const data = localStorage.getItem(KEYS.HOSPITALS);
     return data ? JSON.parse(data) : [];
   },
-  saveHospital: (hosp: Hospital) => {
+  saveHospital: async (hosp: Hospital) => {
     const hosps = StorageService.getHospitals();
     const idx = hosps.findIndex(h => h.id === hosp.id);
     if (idx > -1) hosps[idx] = hosp;
     else hosps.push(hosp);
     localStorage.setItem(KEYS.HOSPITALS, JSON.stringify(hosps));
-    StorageService.syncWithCloud('push');
+    return await StorageService.syncWithCloud('push');
   },
-  deleteHospital: (id: string) => {
+  deleteHospital: async (id: string) => {
     const hosps = StorageService.getHospitals().filter(h => h.id !== id);
     localStorage.setItem(KEYS.HOSPITALS, JSON.stringify(hosps));
-    StorageService.syncWithCloud('push');
+    return await StorageService.syncWithCloud('push');
   },
   
   getSpecialties: (): string[] => {
     const data = localStorage.getItem(KEYS.SPECIALTIES);
     return data ? JSON.parse(data) : [];
   },
-  saveSpecialties: (list: string[]) => {
+  saveSpecialties: async (list: string[]) => {
     localStorage.setItem(KEYS.SPECIALTIES, JSON.stringify(list));
-    StorageService.syncWithCloud('push');
+    return await StorageService.syncWithCloud('push');
   },
   
   getAreas: (): string[] => {
     const data = localStorage.getItem(KEYS.AREAS);
     return data ? JSON.parse(data) : [];
   },
-  saveAreas: (list: string[]) => {
+  saveAreas: async (list: string[]) => {
     localStorage.setItem(KEYS.AREAS, JSON.stringify(list));
-    StorageService.syncWithCloud('push');
+    return await StorageService.syncWithCloud('push');
   },
 
   getDoctors: (): Doctor[] => {
     const data = localStorage.getItem(KEYS.DOCTORS);
     return data ? JSON.parse(data) : [];
   },
-  saveDoctor: (doctor: Doctor) => {
+  saveDoctor: async (doctor: Doctor) => {
     const docs = StorageService.getDoctors();
     const index = docs.findIndex(d => d.id === doctor.id);
     if (index > -1) docs[index] = doctor;
     else docs.push(doctor);
     localStorage.setItem(KEYS.DOCTORS, JSON.stringify(docs));
-    StorageService.syncWithCloud('push');
+    return await StorageService.syncWithCloud('push');
   },
   getDoctorByEmail: (email: string): Doctor | undefined => {
     return StorageService.getDoctors().find(d => d.email.toLowerCase() === email.toLowerCase());
@@ -184,20 +177,21 @@ export const StorageService = {
   getAppointmentsByDoctor: (doctorId: string): Appointment[] => {
     return StorageService.getAppointments().filter(a => a.doctorId === doctorId);
   },
-  saveAppointment: (appointment: Appointment) => {
+  saveAppointment: async (appointment: Appointment) => {
     const apps = StorageService.getAppointments();
     apps.push(appointment);
     localStorage.setItem(KEYS.APPOINTMENTS, JSON.stringify(apps));
-    StorageService.syncWithCloud('push');
+    return await StorageService.syncWithCloud('push');
   },
-  updateAppointment: (appointment: Appointment) => {
+  updateAppointment: async (appointment: Appointment) => {
     const apps = StorageService.getAppointments();
     const index = apps.findIndex(a => a.id === appointment.id);
     if (index > -1) {
       apps[index] = appointment;
       localStorage.setItem(KEYS.APPOINTMENTS, JSON.stringify(apps));
-      StorageService.syncWithCloud('push');
+      return await StorageService.syncWithCloud('push');
     }
+    return false;
   },
   getFeedbacks: (): Feedback[] => {
     const data = localStorage.getItem(KEYS.FEEDBACKS);
@@ -206,11 +200,11 @@ export const StorageService = {
   getFeedbackByDoctor: (doctorId: string): Feedback[] => {
     return StorageService.getFeedbacks().filter(f => f.doctorId === doctorId);
   },
-  saveFeedback: (feedback: Feedback) => {
+  saveFeedback: async (feedback: Feedback) => {
     const fbs = StorageService.getFeedbacks();
     fbs.push(feedback);
     localStorage.setItem(KEYS.FEEDBACKS, JSON.stringify(fbs));
-    StorageService.syncWithCloud('push');
+    return await StorageService.syncWithCloud('push');
   },
   setSession: (session: { role: 'admin' | 'doctor', id: string, name: string, adminRole?: any } | null) => {
     if (session) localStorage.setItem(KEYS.AUTH, JSON.stringify(session));

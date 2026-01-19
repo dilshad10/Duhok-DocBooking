@@ -14,6 +14,7 @@ const Register: React.FC = () => {
   const [specialties, setSpecialties] = useState<string[]>([]);
   const [areas, setAreas] = useState<string[]>([]);
   const [step, setStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -21,7 +22,7 @@ const Register: React.FC = () => {
     specialty: '',
     clinicName: '',
     area: '',
-    mapLink: '', // Mandatory Location Link
+    mapLink: '', 
     phoneNumber: '',
     profileImageUrl: '',
     bio: '',
@@ -60,6 +61,8 @@ const Register: React.FC = () => {
       return;
     }
 
+    setIsSubmitting(true);
+
     const newDoc: Doctor = {
       id: Math.random().toString(36).substr(2, 9),
       fullName: formData.fullName,
@@ -81,8 +84,16 @@ const Register: React.FC = () => {
       notes: ''
     };
 
-    StorageService.saveDoctor(newDoc);
-    setStep(3); // Success state
+    // CRITICAL: Await the global cloud push before showing success
+    const success = await StorageService.saveDoctor(newDoc);
+    
+    if (success) {
+      setStep(3); // Success state
+    } else {
+      setError("Registration saved locally but cloud sync failed. Please refresh.");
+      setStep(3); // Still show success but warn
+    }
+    setIsSubmitting(false);
   };
 
   if (step === 3) {
@@ -287,10 +298,10 @@ const Register: React.FC = () => {
               </button>
               <button 
                 type="submit"
-                disabled={formData.workingDays.length === 0 || formData.timeSlots.length === 0}
+                disabled={formData.workingDays.length === 0 || formData.timeSlots.length === 0 || isSubmitting}
                 className="flex-grow bg-blue-600 text-white font-bold py-5 rounded-[24px] hover:bg-blue-700 active:scale-95 transition-all shadow-xl shadow-blue-100 disabled:opacity-30"
               >
-                {t.completeReg}
+                {isSubmitting ? <i className="fa-solid fa-spinner animate-spin"></i> : t.completeReg}
               </button>
             </div>
           </div>

@@ -23,13 +23,22 @@ const Layout: React.FC<LayoutProps> = ({ children, title }) => {
     document.documentElement.lang = lang;
     StorageService.setLanguage(lang);
     
-    // Initial Cloud Pull to make it cross-browser
-    const performInitialSync = async () => {
+    // Initial Sync
+    const performSync = async () => {
       setIsSyncing(true);
       await StorageService.syncWithCloud('pull');
       setIsSyncing(false);
     };
-    performInitialSync();
+    performSync();
+
+    // POLLLING: Every 15 seconds, check for global updates
+    const pollInterval = setInterval(async () => {
+      setIsSyncing(true);
+      await StorageService.syncWithCloud('pull');
+      setIsSyncing(false);
+    }, 15000);
+
+    return () => clearInterval(pollInterval);
   }, [lang]);
 
   const handleLogout = () => {
@@ -53,12 +62,12 @@ const Layout: React.FC<LayoutProps> = ({ children, title }) => {
           </div>
           
           <nav className="flex items-center space-x-2 sm:space-x-6">
-            {/* Sync Status */}
-            <div className="hidden md:flex items-center mr-4 rtl:ml-4 text-[10px] font-black uppercase tracking-widest opacity-80 bg-blue-800/50 px-3 py-1.5 rounded-full border border-blue-600">
+            {/* Sync Status Indicator */}
+            <div className="hidden md:flex items-center mr-4 rtl:ml-4 text-[10px] font-black uppercase tracking-widest bg-blue-800/50 px-3 py-1.5 rounded-full border border-blue-600 transition-all">
                {isSyncing ? (
-                 <span className="flex items-center gap-2"><i className="fa-solid fa-rotate animate-spin"></i> {t.syncing}</span>
+                 <span className="flex items-center gap-2 text-blue-200"><i className="fa-solid fa-rotate animate-spin"></i> {t.syncing}</span>
                ) : (
-                 <span className="flex items-center gap-2"><i className="fa-solid fa-cloud"></i> {t.synced}</span>
+                 <span className="flex items-center gap-2 text-green-300"><i className="fa-solid fa-cloud"></i> {t.synced}</span>
                )}
             </div>
 

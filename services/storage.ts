@@ -3,21 +3,33 @@ import { Doctor, Appointment, Feedback, AdminAction, AdminUser, DoctorStatus, Ho
 import { Language } from '../translations';
 import { DEFAULT_SPECIALTIES, DEFAULT_DUHOK_AREAS, DEFAULT_HOSPITALS } from '../constants';
 
-// Dedicated Shared Public Vault
-const CLOUD_SYNC_URL = "https://api.npoint.io/89e5a51356e9c490a6d5"; 
+// Dedicated Shared Public Vault for Duhok Doc
+// We use a fresh BIN and PUT method for reliable shared state.
+const CLOUD_SYNC_URL = "https://api.npoint.io/7447663d8d648b26955d"; 
 
 const KEYS = {
-  DOCTORS: 'duh_docs_doctors_v4',
-  APPOINTMENTS: 'duh_docs_appointments_v4',
-  FEEDBACKS: 'duh_docs_feedbacks_v4',
-  ADMINS: 'duh_docs_admins_v4',
-  ADMIN_ACTIONS: 'duh_docs_admin_actions_v4',
-  AUTH: 'duh_docs_auth_v4',
-  LANG: 'duh_docs_lang_v4',
-  HOSPITALS: 'duh_docs_hospitals_v4',
-  SPECIALTIES: 'duh_docs_specialties_v4',
-  AREAS: 'duh_docs_areas_v4',
-  LAST_SYNC: 'duh_docs_last_sync_v4'
+  DOCTORS: 'duh_docs_doctors_v5',
+  APPOINTMENTS: 'duh_docs_appointments_v5',
+  FEEDBACKS: 'duh_docs_feedbacks_v5',
+  ADMINS: 'duh_docs_admins_v5',
+  ADMIN_ACTIONS: 'duh_docs_admin_actions_v5',
+  AUTH: 'duh_docs_auth_v5',
+  LANG: 'duh_docs_lang_v5',
+  HOSPITALS: 'duh_docs_hospitals_v5',
+  SPECIALTIES: 'duh_docs_specialties_v5',
+  AREAS: 'duh_docs_areas_v5',
+  LAST_SYNC: 'duh_docs_last_sync_v5'
+};
+
+// Helper to merge two arrays of objects by an 'id' property
+const mergeById = <T extends { id: string }>(local: T[], remote: T[]): T[] => {
+  const map = new Map<string, T>();
+  local.forEach(item => map.set(item.id, item));
+  remote.forEach(item => {
+    // Remote data usually takes precedence for shared state
+    map.set(item.id, item); 
+  });
+  return Array.from(map.values());
 };
 
 const seedData = () => {
@@ -51,53 +63,83 @@ export const StorageService = {
   syncWithCloud: async (direction: 'push' | 'pull' = 'pull'): Promise<boolean> => {
     try {
       if (direction === 'pull') {
+        console.log("☁️ Attempting Pull...");
         const response = await fetch(CLOUD_SYNC_URL);
-        if (!response.ok) return false;
-
-        const text = await response.text();
-        if (!text || text.trim() === "" || text === "{}") {
-          await StorageService.syncWithCloud('push');
-          return true;
+        
+        // SELF-HEALING: If bin doesn't exist (404), create it by pushing local data
+        if (response.status === 404) {
+           console.warn("⚠️ Cloud bin not found (404). Initializing now...");
+           return await StorageService.syncWithCloud('push');
         }
 
-        const cloudData = JSON.parse(text);
+        if (!response.ok) {
+           console.error("❌ Cloud pull failed:", response.status);
+           return false;
+        }
+
+        const cloudData = await response.json();
+        
         if (cloudData && typeof cloudData === 'object') {
-          if (cloudData.doctors) localStorage.setItem(KEYS.DOCTORS, JSON.stringify(cloudData.doctors));
-          if (cloudData.appointments) localStorage.setItem(KEYS.APPOINTMENTS, JSON.stringify(cloudData.appointments));
+          // Merge Doctors
+          const localDocs = StorageService.getDoctors();
+          const remoteDocs = cloudData.doctors || [];
+          localStorage.setItem(KEYS.DOCTORS, JSON.stringify(mergeById(localDocs, remoteDocs)));
+
+          // Merge Appointments
+          const localApps = StorageService.getAppointments();
+          const remoteApps = cloudData.appointments || [];
+          localStorage.setItem(KEYS.APPOINTMENTS, JSON.stringify(mergeById(localApps, remoteApps)));
+
+          // Merge Admins
+          const localAdmins = StorageService.getAdmins();
+          const remoteAdmins = cloudData.admins || [];
+          localStorage.setItem(KEYS.ADMINS, JSON.stringify(mergeById(localAdmins, remoteAdmins)));
+
+          // Overwrite static management lists
           if (cloudData.hospitals) localStorage.setItem(KEYS.HOSPITALS, JSON.stringify(cloudData.hospitals));
           if (cloudData.specialties) localStorage.setItem(KEYS.SPECIALTIES, JSON.stringify(cloudData.specialties));
           if (cloudData.areas) localStorage.setItem(KEYS.AREAS, JSON.stringify(cloudData.areas));
-          if (cloudData.admins) localStorage.setItem(KEYS.ADMINS, JSON.stringify(cloudData.admins));
           
           localStorage.setItem(KEYS.LAST_SYNC, new Date().toISOString());
-          
-          // Dispatch custom event so UI components know to refresh
           window.dispatchEvent(new CustomEvent('sync-complete'));
+          console.log("✅ Pull complete.");
           return true;
         }
       } else {
+        console.log("☁️ Attempting Push...");
+        
+        // To be safe, try to get existing data to merge before we overwrite
+        let remoteData: any = {};
+        try {
+          const checkRes = await fetch(CLOUD_SYNC_URL);
+          if (checkRes.ok) remoteData = await checkRes.json();
+        } catch(e) { /* ignore pull error during push cycle */ }
+
         const payload = {
-          doctors: StorageService.getDoctors(),
-          appointments: StorageService.getAppointments(),
+          doctors: mergeById(StorageService.getDoctors(), remoteData.doctors || []),
+          appointments: mergeById(StorageService.getAppointments(), remoteData.appointments || []),
+          admins: mergeById(StorageService.getAdmins(), remoteData.admins || []),
           hospitals: StorageService.getHospitals(),
           specialties: StorageService.getSpecialties(),
           areas: StorageService.getAreas(),
-          admins: StorageService.getAdmins(),
         };
 
         const response = await fetch(CLOUD_SYNC_URL, {
-          method: 'POST',
+          method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
 
         if (response.ok) {
+          console.log("✅ Push complete.");
           localStorage.setItem(KEYS.LAST_SYNC, new Date().toISOString());
           return true;
+        } else {
+          console.error("❌ Push failed:", response.status);
         }
       }
     } catch (e) {
-      console.error("Cloud sync error:", e);
+      console.error("❌ Sync Error:", e);
       return false;
     }
     return false;

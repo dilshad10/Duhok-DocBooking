@@ -1,5 +1,6 @@
 
-import { useState, useEffect, useRef } from 'react';
+// Added React to imports to fix "Cannot find namespace 'React'" error
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { StorageService } from '../services/storage.ts';
 import { MessagingService } from '../services/MessagingService.ts';

@@ -11,21 +11,21 @@ import CancelAppointment from './views/CancelAppointment.tsx';
 import DoctorProfile from './views/DoctorProfile.tsx';
 import { StorageService } from './services/storage.ts';
 
+// Moved DoctorRoute outside of App to resolve children prop requirement error in element prop
+const DoctorRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const s = StorageService.getSession();
+  if (!s || s.role !== 'doctor') return <Navigate to="/login" />;
+  return <>{children}</>;
+};
+
+// Moved AdminRoute outside of App to resolve children prop requirement error in element prop
+const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const s = StorageService.getSession();
+  if (!s || s.role !== 'admin') return <Navigate to="/login" />;
+  return <>{children}</>;
+};
+
 const App: React.FC = () => {
-  // Simple route guard for doctors
-  const DoctorRoute = ({ children }: { children: React.ReactNode }) => {
-    const s = StorageService.getSession();
-    if (!s || s.role !== 'doctor') return <Navigate to="/login" />;
-    return <>{children}</>;
-  };
-
-  // Simple route guard for admin
-  const AdminRoute = ({ children }: { children: React.ReactNode }) => {
-    const s = StorageService.getSession();
-    if (!s || s.role !== 'admin') return <Navigate to="/login" />;
-    return <>{children}</>;
-  };
-
   return (
     <HashRouter>
       <Layout>

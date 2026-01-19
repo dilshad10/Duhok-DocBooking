@@ -23,7 +23,7 @@ const seedData = () => {
       id: 'admin_001',
       fullName: 'Duhok Admin',
       email: 'admin@docbooking.duhok',
-      passwordHash: 'admin123',
+      passwordHash: '(11223344$$&&@@)',
       role: 'super_admin',
       createdAt: new Date().toISOString()
     };

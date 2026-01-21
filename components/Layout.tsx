@@ -12,44 +12,54 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children, title }) => {
   const navigate = useNavigate();
   const [lang, setLang] = useState<Language>(StorageService.getLanguage());
-  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<'syncing' | 'success' | 'error'>('success');
   const t = translations[lang];
   const session = StorageService.getSession();
 
   useEffect(() => {
-    // Set direction based on language
     const dir = (lang === 'ku' || lang === 'ar') ? 'rtl' : 'ltr';
     document.documentElement.dir = dir;
     document.documentElement.lang = lang;
     StorageService.setLanguage(lang);
     
-    // Initial Sync
     const performSync = async () => {
-      setIsSyncing(true);
-      await StorageService.syncWithCloud('pull');
-      setIsSyncing(false);
+      if (!navigator.onLine) {
+        setSyncStatus('error');
+        return;
+      }
+      setSyncStatus('syncing');
+      const ok = await StorageService.syncWithCloud('pull');
+      setSyncStatus(ok ? 'success' : 'error');
     };
+
+    // Initial sync
     performSync();
 
-    // POLLLING: Every 15 seconds, check for global updates
+    // POLLING: Every 30 seconds, only if tab is visible and online
     const pollInterval = setInterval(async () => {
-      setIsSyncing(true);
-      await StorageService.syncWithCloud('pull');
-      setIsSyncing(false);
-    }, 15000);
+      if (document.visibilityState === 'visible' && navigator.onLine) {
+        setSyncStatus('syncing');
+        const ok = await StorageService.syncWithCloud('pull');
+        setSyncStatus(ok ? 'success' : 'error');
+      }
+    }, 30000);
 
-    return () => clearInterval(pollInterval);
+    const handleError = () => setSyncStatus('error');
+    const handleSuccess = () => setSyncStatus('success');
+    window.addEventListener('sync-error', handleError);
+    window.addEventListener('sync-complete', handleSuccess);
+
+    return () => {
+      clearInterval(pollInterval);
+      window.removeEventListener('sync-error', handleError);
+      window.removeEventListener('sync-complete', handleSuccess);
+    };
   }, [lang]);
 
   const handleLogout = () => {
     StorageService.setSession(null);
     navigate('/');
     window.location.reload();
-  };
-
-  const changeLang = (l: Language) => {
-    setLang(l);
-    window.location.reload(); 
   };
 
   return (
@@ -62,21 +72,11 @@ const Layout: React.FC<LayoutProps> = ({ children, title }) => {
           </div>
           
           <nav className="flex items-center space-x-2 sm:space-x-6">
-            {/* Sync Status Indicator */}
-            <div className="hidden md:flex items-center mr-4 rtl:ml-4 text-[10px] font-black uppercase tracking-widest bg-blue-800/50 px-3 py-1.5 rounded-full border border-blue-600 transition-all">
-               {isSyncing ? (
-                 <span className="flex items-center gap-2 text-blue-200"><i className="fa-solid fa-rotate animate-spin"></i> {t.syncing}</span>
-               ) : (
-                 <span className="flex items-center gap-2 text-green-300"><i className="fa-solid fa-cloud"></i> {t.synced}</span>
-               )}
-            </div>
-
-            {/* Language Switcher */}
             <div className="flex bg-blue-800 p-1 rounded-xl border border-blue-600">
               {(['en', 'ku', 'ar'] as Language[]).map((l) => (
                 <button
                   key={l}
-                  onClick={() => changeLang(l)}
+                  onClick={() => { setLang(l); window.location.reload(); }}
                   className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase transition-all ${
                     lang === l ? 'bg-white text-blue-700 shadow-sm' : 'text-blue-100 hover:text-white'
                   }`}
@@ -113,11 +113,6 @@ const Layout: React.FC<LayoutProps> = ({ children, title }) => {
 
       <footer className="bg-gray-100 border-t py-12">
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <div className="flex justify-center gap-6 mb-8 opacity-40 grayscale">
-             <i className="fa-solid fa-hand-holding-medical text-3xl"></i>
-             <i className="fa-solid fa-hospital-user text-3xl"></i>
-             <i className="fa-solid fa-user-doctor text-3xl"></i>
-          </div>
           <p className="text-gray-500 text-sm font-bold opacity-70">&copy; {new Date().getFullYear()} Duhok DocBooking. {t.footer}</p>
         </div>
       </footer>

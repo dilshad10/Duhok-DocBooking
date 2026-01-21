@@ -117,12 +117,6 @@ const Login: React.FC = () => {
           {t.loginBtn}
         </button>
 
-        <div className="bg-blue-50 border border-blue-100 p-4 rounded-2xl text-[10px] text-blue-600 font-bold leading-relaxed">
-           <p className="uppercase tracking-widest mb-1 opacity-60">Admin Test Login:</p>
-           <p>Email: <span className="text-gray-900">admin@duh.ok</span></p>
-           <p>Pass: <span className="text-gray-900">admin123</span></p>
-        </div>
-
         <div className="text-center pt-4">
           <p className="text-sm text-gray-500">{t.newClinic} <button type="button" onClick={() => navigate('/register')} className="text-blue-600 font-bold hover:underline">{t.registerNow}</button></p>
         </div>

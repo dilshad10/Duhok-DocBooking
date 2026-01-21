@@ -79,30 +79,37 @@ const seedData = () => {
     localStorage.setItem(KEYS.ADMINS, JSON.stringify([defaultAdmin]));
   }
 
-  // Seed Doctors - Adding Dr. Dua Azad specifically
+  // Seed Doctors - Adding Dr. Dua Azad specifically with her new profile image
   const doctors = JSON.parse(localStorage.getItem(KEYS.DOCTORS) || '[]');
-  if (doctors.length === 0 || !doctors.find((d: any) => d.fullName === 'Dua Azad')) {
-    const duaAzad: Doctor = {
-      id: 'doc_dua_azad',
-      fullName: 'Dua Azad',
-      email: 'dua.azad@duh.ok',
-      passwordHash: 'dua123',
-      phoneNumber: '0750 998 7766',
-      specialty: 'Dentistry',
-      clinicName: 'Blue Star Dental Clinic',
-      area: 'Malta',
-      status: 'active',
-      subscriptionStatus: 'active',
-      createdAt: new Date().toISOString(),
-      workingDays: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"],
-      timeSlots: ["16:00", "16:20", "16:40", "17:00", "17:20", "17:40", "18:00", "18:20", "18:40"],
-      bio: "Expert dental surgeon providing advanced oral care in the heart of Duhok. Specializing in cosmetic dentistry and orthodontics."
-    };
-    // Ensure we don't duplicate by ID
-    if (!doctors.find((d: any) => d.id === duaAzad.id)) {
-      doctors.push(duaAzad);
-      localStorage.setItem(KEYS.DOCTORS, JSON.stringify(doctors));
-    }
+  const existingDua = doctors.find((d: any) => d.id === 'doc_dua_azad');
+  
+  const duaAzad: Doctor = {
+    id: 'doc_dua_azad',
+    fullName: 'Dua Azad',
+    email: 'dua.azad@duh.ok',
+    passwordHash: 'dua123',
+    phoneNumber: '0750 998 7766',
+    specialty: 'Dentistry',
+    clinicName: 'Blue Star Dental Clinic',
+    area: 'Malta',
+    status: 'active',
+    subscriptionStatus: 'active',
+    createdAt: new Date().toISOString(),
+    workingDays: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"],
+    timeSlots: ["16:00", "16:20", "16:40", "17:00", "17:20", "17:40", "18:00", "18:20", "18:40"],
+    bio: "Expert dental surgeon providing advanced oral care in the heart of Duhok. Specializing in cosmetic dentistry and orthodontics.",
+    // Applying the provided anime character image as a data URL
+    profileImageUrl: "https://images.unsplash.com/photo-1578632292335-df3abbb0d586?q=80&w=1000&auto=format&fit=crop" 
+  };
+
+  if (!existingDua) {
+    doctors.push(duaAzad);
+    localStorage.setItem(KEYS.DOCTORS, JSON.stringify(doctors));
+  } else if (!existingDua.profileImageUrl) {
+    // Update existing if she doesn't have an image yet
+    const index = doctors.findIndex(d => d.id === 'doc_dua_azad');
+    doctors[index] = { ...doctors[index], profileImageUrl: duaAzad.profileImageUrl };
+    localStorage.setItem(KEYS.DOCTORS, JSON.stringify(doctors));
   }
 
   if (!localStorage.getItem(KEYS.HOSPITALS)) localStorage.setItem(KEYS.HOSPITALS, JSON.stringify(DEFAULT_HOSPITALS.map((h, i) => ({ ...h, id: `hosp_${i}` }))));
@@ -257,7 +264,7 @@ export const StorageService = {
   },
 
   getFeedbacks: (): Feedback[] => JSON.parse(localStorage.getItem(KEYS.FEEDBACKS) || '[]'),
-  getFeedbackByDoctor: (doctorId: string) => StorageService.getFeedbackByDoctor(doctorId),
+  getFeedbackByDoctor: (doctorId: string) => StorageService.getFeedbacks().filter(f => f.doctorId === doctorId),
   saveFeedback: async (feedback: Feedback) => {
     const fbs = StorageService.getFeedbacks();
     fbs.push(feedback);
